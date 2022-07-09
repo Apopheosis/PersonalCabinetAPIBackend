@@ -13,5 +13,6 @@ namespace PersonalCabinetAPI
         }
         public DbSet<Operation> data_all { get; set; }
         public DbSet<Account> accounts { get; set; }
+        public DbSet<Airline> airline_company { get; set; }
     }
 }

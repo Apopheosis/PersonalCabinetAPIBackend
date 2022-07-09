@@ -10,5 +10,6 @@ namespace PersonalCabinetAPI.Service
         Task<IEnumerable<Entry>> GetEntriesByTicketNumberTransaction(Request req);
         Task<IEnumerable<Operation>> GetOperationsByAirlineCodeDocNumber(string code, string number);
         Task<IEnumerable<Operation>> GetOperationsByAirlineCodeTicketNumber(AirlineRequest req);
+        Task<IEnumerable<AirlineDTO>> GetAllAirlinesTransaction();
     }
 }

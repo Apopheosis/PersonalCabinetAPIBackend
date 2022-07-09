@@ -16,7 +16,7 @@ public class ApiController : ControllerBase
 {
     private readonly IOperationService _opservice;
     private readonly IAccountService _acservice;
-
+    
     public ApiController(IOperationService opservice, IAccountService acservice)
     {
         _opservice = opservice;
@@ -26,30 +26,44 @@ public class ApiController : ControllerBase
     [HttpPost("by_doc_number/")]
     public async Task<IEnumerable<Entry>> GetByDocNumber(Request req)
     {
-        Thread.Sleep(5000);
+        //Thread.Sleep(180000);
         var operations = await _opservice.GetEntriesByDocNumberTransaction(req.number);
         return operations;
+    }
+
+    [HttpPost("get_all_airlines")]
+    public async Task<IEnumerable<AirlineDTO>> GetAllAirlines()
+    {
+        var airlines = await _opservice.GetAllAirlinesTransaction();
+        return airlines;
     }
     
     [HttpPost("by_ticket_number/")]
     public async Task<IEnumerable<Entry>> GetByTicketNumber(Request req)
     {
-        Thread.Sleep(5000);
-        return await _opservice.GetEntriesByTicketNumberTransaction(req);
+        //Thread.Sleep(5000);
+        var operations = await _opservice.GetEntriesByTicketNumberTransaction(req);
+
+        return operations;
     }
 
     [HttpPost("operations_by_airline_code_doc_number")]
     public async Task<IEnumerable<Operation>> GetOperationsByAirlineCodeDocNumber(AirlineRequest req)
     {
-        Thread.Sleep(5000);
-        return await _opservice.GetOperationsByAirlineCodeDocNumber(req.code, req.number);
+        //Thread.Sleep(5000);
+         return await _opservice.GetOperationsByAirlineCodeDocNumber(req.code, req.number);
     }
     
     [HttpPost("operations_by_airline_code_ticket_number")]
     public async Task<IEnumerable<Operation>> GetOperationsByAirlineCodeTicketNumber(AirlineRequest req)
     {
-        Thread.Sleep(5000);
-        return await _opservice.GetOperationsByAirlineCodeTicketNumber(req);
+        var operations = _opservice.GetOperationsByAirlineCodeTicketNumber(req).Result;
+        if (operations is null)
+        {
+            throw new Exception();
+        }
+
+        return operations;
     }
 
     [HttpPost("login")]

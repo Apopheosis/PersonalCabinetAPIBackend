@@ -33,7 +33,7 @@ public class Operation
     public long ticket_id { get; set; }
     public string ticket_number { get; set; }
     public int ticket_type { get; set; }
-    public long airline_route_id { get; set; }
+    public long? airline_route_id { get; set; }
     public string airline_code { get; set; }
     public string depart_place { get; set; }
     public DateTime? depart_datetime { get; set; }
@@ -53,6 +53,6 @@ public class Operation
     public string airport_to_name { get; set; }
     public string flight_nums { get; set; }
     public string fare_code { get; set; }
-    public int fare_price { get; set; }    
+    public int? fare_price { get; set; }    
 
 }
