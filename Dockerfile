@@ -15,4 +15,6 @@ FROM mcr.microsoft.com/dotnet/aspnet:6.0
 WORKDIR /app
 COPY --from=build-env /app/out .
 ENTRYPOINT ["dotnet", "PersonalCabinetAPI.dll"]
+
+
 EXPOSE 7269
