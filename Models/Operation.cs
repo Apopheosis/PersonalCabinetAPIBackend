@@ -8,7 +8,7 @@ public class Operation
     [Key]
     public long operation_id { get; set; }
     public string type { get; set; }
-    public DateTime time { get; set; }
+    public string time { get; set; }
     public string place { get; set; }
     public string sender { get; set; }
     public DateTime transaction_time { get; set; }
@@ -36,9 +36,9 @@ public class Operation
     public long? airline_route_id { get; set; }
     public string airline_code { get; set; }
     public string depart_place { get; set; }
-    public DateTime? depart_datetime { get; set; }
+    public string? depart_datetime { get; set; }
     public string arrive_place { get; set; }
-    public DateTime? arrive_datetime { get; set; }
+    public string? arrive_datetime { get; set; }
     public string pnr_id { get; set; }
     public string? operating_airline_code { get; set; }
     public string city_from_code { get; set; }

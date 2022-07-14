@@ -1,13 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using AutoMapper;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.Configuration;
 using Npgsql;
 using NpgsqlTypes;
@@ -21,18 +26,6 @@ namespace PersonalCabinetAPI.Service
         private readonly IMapper _mapper;
         private readonly DatabaseContext _context;
         private readonly IConfiguration _config;
-
-        private const string sqlQueryEntriesAllTickets =
-            "SELECT passenger_document_number, surname, name, sender, validation_status, time, type, ticket_number, depart_datetime, airline_code, city_from_name, city_to_name FROM data_all WHERE passenger_document_number=(SELECT passenger_document_number FROM data_all WHERE ticket_number=@number LIMIT 1) ORDER BY time, ticket_number, depart_datetime, type DESC";
-
-        private const string sqlQueryEntriesNotAllTickets =
-            "SELECT passenger_document_number, surname, name, sender, validation_status, time, type, ticket_number, depart_datetime, airline_code, city_from_name, city_to_name FROM data_all WHERE ticket_number=@number ORDER BY time, ticket_number, depart_datetime, type DESC";
-
-        private const string sqlQueryOperationsNotAllTickets =
-            "SELECT * FROM data_all WHERE ticket_number=@number ORDER BY time, ticket_number, depart_datetime, type DESC";
-
-        private const string sqlQueryOperationsAllTickets =
-            "SELECT * FROM data_all WHERE passenger_document_number=(SELECT passenger_document_number FROM data_all WHERE ticket_number=@number LIMIT 1) ORDER BY time, ticket_number, depart_datetime, type DESC";
 
         public OperationService(DatabaseContext context, IMapper mapper, IConfiguration config)
         {
@@ -51,7 +44,7 @@ namespace PersonalCabinetAPI.Service
             var con = _config.GetConnectionString("DatabaseContext");
             await using var conn = new NpgsqlConnection(con);
             await conn.OpenAsync();
-            await using var cmd = new NpgsqlCommand("SELECT passenger_document_number, surname, name, sender, validation_status, time, type, ticket_number, depart_datetime, airline_code, city_from_name, city_to_name FROM data_all WHERE passenger_document_number=@number", conn)
+            await using var cmd = new NpgsqlCommand(File.ReadAllText(_config.GetValue<string>("SQLQueries:GetByDocNumber")), conn)
             {
             };
             cmd.Parameters.Add("@number", NpgsqlDbType.Varchar);
@@ -66,10 +59,10 @@ namespace PersonalCabinetAPI.Service
                 entry.name = reader.GetString(2);
                 entry.sender = reader.GetString(3);
                 entry.validation_status = reader.GetValue(4).ToString();
-                entry.time = reader.GetDateTime(5);
+                entry.time = reader.GetString(5);
                 entry.type = reader.GetString(6);
                 entry.ticket_number = reader.GetString(7);
-                entry.depart_datetime= reader.GetDateTime(8).ToUniversalTime();;
+                entry.depart_datetime= reader.GetString(8);
                 entry.airline_code = reader.GetString(9);
                 entry.city_from_name = reader.GetString(10);
                 entry.city_to_name = reader.GetString(11);
@@ -90,11 +83,11 @@ namespace PersonalCabinetAPI.Service
             var SqlQuery = "";
             if (req.isAllTickets)
             {
-                SqlQuery = sqlQueryEntriesAllTickets;
+                SqlQuery = File.ReadAllText(_config.GetValue<string>("SQLQueries:ByTicketNumberAllTicketsEntries"));
             }
             else
             {
-                SqlQuery = sqlQueryEntriesNotAllTickets;
+                SqlQuery = File.ReadAllText(_config.GetValue<string>("SQLQueries:ByTicketNumberNotAllTicketsEntries"));
             }
             var con = _config.GetConnectionString("DatabaseContext");
             await using var conn = new NpgsqlConnection(con);
@@ -114,10 +107,10 @@ namespace PersonalCabinetAPI.Service
                 entry.name = reader.GetString(2);
                 entry.sender = reader.GetString(3);
                 entry.validation_status = reader.GetValue(4).ToString();
-                entry.time = reader.GetDateTime(5).ToUniversalTime();
+                entry.time = reader.GetString(5);
                 entry.type = reader.GetString(6);
                 entry.ticket_number = reader.GetString(7);
-                entry.depart_datetime= reader.GetDateTime(8);
+                entry.depart_datetime= reader.GetString(8);
                 entry.airline_code = reader.GetString(9);
                 entry.city_from_name = reader.GetString(10);
                 entry.city_to_name = reader.GetString(11);
@@ -136,7 +129,7 @@ namespace PersonalCabinetAPI.Service
             var con = _config.GetConnectionString("DatabaseContext");
             await using var conn = new NpgsqlConnection(con);
             await conn.OpenAsync();
-            await using var cmd = new NpgsqlCommand("SELECT * FROM data_all WHERE passenger_document_number=@number", conn)
+            await using var cmd = new NpgsqlCommand(File.ReadAllText(_config.GetValue<string>("SQLQueries:GetByDocNumberOperations")), conn)
             {
             };
             cmd.Parameters.Add("@number", NpgsqlDbType.Varchar);
@@ -149,7 +142,7 @@ namespace PersonalCabinetAPI.Service
                 Operation op = new Operation();
                 op.operation_id = reader.GetInt64(0);
                 op.type = reader.GetString(1);
-                op.time = reader.GetDateTime(2);
+                op.time = reader.GetString(2);
                 op.place = code == dbAirlineCode ? reader.GetString(3) : "";
                 op.sender = code == dbAirlineCode ? reader.GetString(4) : "";
                 op.transaction_time = reader.GetDateTime(5);
@@ -177,9 +170,9 @@ namespace PersonalCabinetAPI.Service
                 op.airline_route_id = code == dbAirlineCode ? reader.GetInt64(28) : null;
                 op.airline_code = code == dbAirlineCode ? reader.GetString(29) : "";
                 op.depart_place = code == dbAirlineCode ? reader.GetString(30) : "";
-                op.depart_datetime = reader.GetDateTime(31);
+                op.depart_datetime = reader.GetString(31);
                 op.arrive_place = code == dbAirlineCode ? reader.GetString(32) : "";
-                op.arrive_datetime = code == dbAirlineCode ? reader.GetDateTime(33) : null;
+                op.arrive_datetime = code == dbAirlineCode ? reader.GetString(33) : null;
                 op.pnr_id = code == dbAirlineCode ? reader.GetString(34) : "";
                 op.operating_airline_code = code == dbAirlineCode ? reader.GetValue(35).ToString() : "";
                 op.city_from_code = code == dbAirlineCode ? reader.GetString(38) : "";
@@ -208,11 +201,11 @@ namespace PersonalCabinetAPI.Service
             var sqlQuery = "";
             if (req.isAllTickets)
             {
-                sqlQuery = sqlQueryOperationsAllTickets;
+                sqlQuery = File.ReadAllText(_config.GetValue<string>("SQLQueries:ByTicketNumberAllTicketsOperations"));
             }
             else
             {
-                sqlQuery = sqlQueryOperationsNotAllTickets;
+                sqlQuery = File.ReadAllText(_config.GetValue<string>("SQLQueries:ByTicketNumberNotAllTicketsOperations"));
             }
 
             var con = _config.GetConnectionString("DatabaseContext");
@@ -231,7 +224,7 @@ namespace PersonalCabinetAPI.Service
                 Operation op = new Operation();
                 op.operation_id = reader.GetInt64(0);
                 op.type = reader.GetString(1);
-                op.time = reader.GetDateTime(2);
+                op.time = reader.GetString(2);
                 op.place = code == dbAirlineCode ? reader.GetString(3) : "";
                 op.sender = code == dbAirlineCode ? reader.GetString(4) : "";
                 op.transaction_time = reader.GetDateTime(5);
@@ -259,9 +252,9 @@ namespace PersonalCabinetAPI.Service
                 op.airline_route_id = code == dbAirlineCode ? reader.GetInt64(28) : null;
                 op.airline_code = code == dbAirlineCode ? reader.GetString(29) : "";
                 op.depart_place = code == dbAirlineCode ? reader.GetString(30) : "";
-                op.depart_datetime = reader.GetDateTime(31);
+                op.depart_datetime = reader.GetString(31);
                 op.arrive_place = code == dbAirlineCode ? reader.GetString(32) : "";
-                op.arrive_datetime = code == dbAirlineCode ? reader.GetDateTime(33) : null;
+                op.arrive_datetime = code == dbAirlineCode ? reader.GetString(33) : null;
                 op.pnr_id = code == dbAirlineCode ? reader.GetString(34) : "";
                 op.operating_airline_code = code == dbAirlineCode ? reader.GetValue(35).ToString() : "";
                 op.city_from_code = code == dbAirlineCode ? reader.GetString(38) : "";

@@ -10,10 +10,10 @@ namespace PersonalCabinetAPI.DTO
         public string name { get; set; }
         public string sender { get; set; }
         public string validation_status { get; set; }
-        public DateTimeOffset time { get; set; }
+        public string time { get; set; }
         public string type { get; set; }
         public string ticket_number { get; set; }
-        public DateTimeOffset depart_datetime { get; set; }
+        public string depart_datetime { get; set; }
         public string airline_code { get; set; }
         public string city_from_name { get; set; }
         public string city_to_name { get; set; }

@@ -16,5 +16,7 @@ WORKDIR /app
 COPY --from=build-env /app/out .
 ENTRYPOINT ["dotnet", "PersonalCabinetAPI.dll"]
 
+COPY ./Queries /app/Queries/
+
 
 EXPOSE 7269
