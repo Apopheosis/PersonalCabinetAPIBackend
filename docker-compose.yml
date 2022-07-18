@@ -29,4 +29,4 @@ services:
       - POSTGRES_PASSWORD=root
       - POSTGRES_USER=root
     volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql/
