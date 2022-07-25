@@ -14,7 +14,9 @@ SET row_security = off;
 -- Name: tickets; Type: DATABASE; Schema: -; Owner: postgres
 --
 
-CREATE DATABASE tickets WITH TEMPLATE = template0 ENCODING = 'UTF8' LOCALE = 'Russian_Russia.1251';
+CREATE DATABASE tickets WITH TEMPLATE = template0 ENCODING = 'UTF8';
+
+CREATE USER postgres WITH superuser password 'root';
 
 
 ALTER DATABASE tickets OWNER TO postgres;
